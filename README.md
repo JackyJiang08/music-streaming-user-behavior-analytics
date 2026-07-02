@@ -1,36 +1,50 @@
 # Spotify User Behavior & Conversion Optimization
 
-> **Work in progress** — this project is at an early stage; more analysis, EDA, and modeling notebooks will be added.
+An end-to-end data analytics project on Spotify-style user behavior, focused on two business problems:
 
-A data analysis project on Spotify-style user behavior: retention diagnostics, subscription conversion funnels, and building a user-level feature/label wide table for downstream churn and conversion modeling.
+1. **Retention** — which behavioral signals (activity level, ad load, content interaction) predict short-term churn?
+2. **Monetization** — where does the free-to-paid subscription funnel break, and which levers (trial exposure, device, engagement) move conversion?
+
+The project builds from SQL-based diagnostics toward a full modeling pipeline: hypothesis-driven analysis, a reproducible user-level feature/label data asset, and (upcoming) EDA, churn/conversion models, and experiment design.
+
+> **Status: early stage.** The diagnostic analysis and feature-table construction are in place; EDA, modeling, and experimentation phases are planned next.
 
 ## Repository Structure
 
 ```
 ├── data/
 │   ├── users.csv                  # One row per user: demographics, device, acquisition channel
-│   ├── listening_events.csv.gz    # Event-level listening logs (gzipped, ~118 MB uncompressed)
-│   ├── subscription_events.csv    # Trial / payment / renewal / cancellation events
+│   ├── listening_events.csv.gz    # Event-level listening logs (gzipped; ~118 MB uncompressed)
+│   ├── subscription_events.csv    # Trial, payment, renewal, and cancellation events
 │   ├── ad_events.csv              # Ad impressions, clicks, completions, revenue
-│   └── feature_table.csv          # Prebuilt user-level feature table (one row per user)
+│   └── feature_table.csv          # Prebuilt user-level feature snapshot (one row per user)
 └── notebooks/
-    ├── Lesson2_SQL_I.ipynb        # Retention overview & hypothesis testing with SQL
-    └── Lesson3_SQL_II_User_Level_Wide_Table_and_Label_Design.ipynb
-                                   # Building the user-level wide table and labels
+    ├── 01_retention_and_conversion_analysis.ipynb
+    └── 02_user_feature_table_and_labels.ipynb
 ```
 
-## Notebooks
+## Analysis
 
-Both notebooks are designed for Google Colab and use `pandas + sqlite3` (no DuckDB required):
+**`01_retention_and_conversion_analysis.ipynb` — Retention Overview and Conversion Hypothesis Analysis.**
+Establishes the business baseline (activity, churn, conversion, cancellation rates), segments users by subscription status and lifecycle stage, and tests five behavioral hypotheses: low activity as a churn signal, ad overload vs. retention (with activity-level controls), trial exposure vs. paid conversion, device differences, and content interaction vs. stickiness. Maps the subscription conversion funnel to locate drop-off points.
 
-- **Lesson 2 — SQL I: Retention Overview and Hypothesis Testing.** Table granularity checks, business baseline metrics, and five hypotheses: low activity as a churn signal, ad overload vs. retention, trial exposure vs. paid conversion, device differences, and content interaction vs. stickiness. Includes a subscription conversion funnel.
-- **Lesson 3 — SQL II: User-Level Wide Table and Label Design.** Time window design (snapshot / observation / prediction), feature aggregation from listening, ad, and subscription events, churn/conversion label definitions, JOIN-inflation QA, and export of the final wide table.
+**`02_user_feature_table_and_labels.ipynb` — User-Level Feature Table and Label Engineering.**
+Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling.
 
-## Usage (Colab)
+## Roadmap
 
-1. Create a `/content/data` folder in the Colab file sidebar.
-2. Upload the five data files. Note: `listening_events.csv.gz` is gzipped to stay under GitHub's 100 MB file limit — decompress it first (`gunzip listening_events.csv.gz`), or load it directly with `pd.read_csv('listening_events.csv.gz')` (pandas handles gzip transparently).
-3. Run the data-loading cell, then work through the sections.
+- [x] Retention and conversion diagnostics (SQL)
+- [x] User-level feature table and label engineering
+- [ ] Exploratory data analysis and visualization
+- [ ] Churn and paid-conversion prediction models
+- [ ] Experiment design for conversion levers (trial exposure, ad load)
+
+## Getting Started
+
+The notebooks run on `pandas + sqlite3` — no database setup required.
+
+**Colab:** create a `/content/data` folder, upload the five data files, and run the loading cell.
+**Note on `listening_events.csv.gz`:** the file is gzipped to stay under GitHub's 100 MB limit. Either decompress it (`gunzip listening_events.csv.gz`) or load it directly — `pd.read_csv('listening_events.csv.gz')` handles gzip transparently.
 
 ## License
 
