@@ -18,9 +18,16 @@ The project builds from SQL-based diagnostics toward a full modeling pipeline: h
 │   ├── subscription_events.csv    # Trial, payment, renewal, and cancellation events
 │   ├── ad_events.csv              # Ad impressions, clicks, completions, revenue
 │   └── feature_table.csv          # Prebuilt user-level feature snapshot (one row per user)
-└── notebooks/
-    ├── 01_retention_and_conversion_analysis.ipynb
-    └── 02_user_feature_table_and_labels.ipynb
+├── notebooks/
+│   ├── 01_retention_and_conversion_analysis.ipynb
+│   └── 02_user_feature_table_and_labels.ipynb
+├── src/
+│   └── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
+├── sql/
+│   └── build_user_feature_table.sql   # Wide-table definition (single source of truth)
+├── scripts/
+│   └── build_feature_table.py     # CLI pipeline: build + QA + export the wide table
+└── requirements.txt
 ```
 
 ## Analysis
@@ -29,7 +36,7 @@ The project builds from SQL-based diagnostics toward a full modeling pipeline: h
 Establishes the business baseline (activity, churn, conversion, cancellation rates), segments users by subscription status and lifecycle stage, and tests five behavioral hypotheses: low activity as a churn signal, ad overload vs. retention (with activity-level controls), trial exposure vs. paid conversion, device differences, and content interaction vs. stickiness. Maps the subscription conversion funnel to locate drop-off points.
 
 **`02_user_feature_table_and_labels.ipynb` — User-Level Feature Table and Label Engineering.**
-Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling.
+Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling. The wide-table SQL is versioned in `sql/build_user_feature_table.sql` and can be run end to end with `python scripts/build_feature_table.py`.
 
 ## Roadmap
 
@@ -41,10 +48,23 @@ Designs the snapshot / observation / prediction time-window framework, aggregate
 
 ## Getting Started
 
-The notebooks run on `pandas + sqlite3` — no database setup required.
+Everything runs on `pandas + sqlite3` — no database setup required.
 
-**Colab:** create a `/content/data` folder, upload the five data files, and run the loading cell.
-**Note on `listening_events.csv.gz`:** the file is gzipped to stay under GitHub's 100 MB limit. Either decompress it (`gunzip listening_events.csv.gz`) or load it directly — `pd.read_csv('listening_events.csv.gz')` handles gzip transparently.
+```bash
+git clone https://github.com/JackyJiang08/spotify-user-conversion-optimization.git
+cd spotify-user-conversion-optimization
+pip install -r requirements.txt
+
+# Rebuild the user-level wide table from the raw event tables:
+python scripts/build_feature_table.py
+
+# Or explore interactively:
+jupyter lab notebooks/
+```
+
+All notebooks and scripts share one data path (`src/data_loader.py`), which auto-discovers the data in `./data` (local) or `/content/data` (Colab) and reads the gzipped `listening_events.csv.gz` directly. Set `SPOTIFY_DATA_DIR` to point somewhere else.
+
+> `listening_events.csv.gz` is stored gzipped to stay under GitHub's 100 MB file limit; nothing needs to be decompressed to run the project.
 
 ## License
 
