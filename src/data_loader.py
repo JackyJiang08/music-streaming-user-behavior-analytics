@@ -70,6 +70,15 @@ def load_dataframes(data_dir: Path | str | None = None) -> dict[str, pd.DataFram
     }
 
 
+def load_table(table: str, data_dir: Path | str | None = None) -> pd.DataFrame:
+    """Load a single project table (cheaper than load_dataframes when the
+    analysis only needs one, e.g. feature_table)."""
+    if table not in TABLES:
+        raise KeyError(f"Unknown table {table!r}; expected one of {list(TABLES)}")
+    data_dir = Path(data_dir) if data_dir else find_data_dir()
+    return pd.read_csv(_resolve_file(data_dir, TABLES[table]))
+
+
 def connect(data_dir: Path | str | None = None):
     """Load the tables into in-memory SQLite and return query helpers.
 

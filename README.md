@@ -20,7 +20,8 @@ The project builds from SQL-based diagnostics toward a full modeling pipeline: h
 │   └── feature_table.csv          # Prebuilt user-level feature snapshot (one row per user)
 ├── notebooks/
 │   ├── 01_retention_and_conversion_analysis.ipynb
-│   └── 02_user_feature_table_and_labels.ipynb
+│   ├── 02_user_feature_table_and_labels.ipynb
+│   └── 03_eda_and_visualization.ipynb
 ├── src/
 │   └── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
 ├── sql/
@@ -38,11 +39,14 @@ Establishes the business baseline (activity, churn, conversion, cancellation rat
 **`02_user_feature_table_and_labels.ipynb` — User-Level Feature Table and Label Engineering.**
 Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling. The wide-table SQL is versioned in `sql/build_user_feature_table.sql` and can be run end to end with `python scripts/build_feature_table.py`.
 
+**`03_eda_and_visualization.ipynb` — Exploratory Analysis and Business Visualization.**
+Turns the feature snapshot into business-facing charts: data quality gates (granularity, missing rates, label levels), derived audience segments (activity level, content engagement, ad-load buckets), and visual diagnostics — churn/conversion baseline, activity vs. churn, the conversion funnel, ad pressure, content engagement, device and acquisition-channel quality, listening-time distributions, engagement scatter, and signup-cohort trends. Each chart is framed by the business question, reading, candidate action, and limitations.
+
 ## Roadmap
 
 - [x] Retention and conversion diagnostics (SQL)
 - [x] User-level feature table and label engineering
-- [ ] Exploratory data analysis and visualization
+- [x] Exploratory data analysis and visualization
 - [ ] Churn and paid-conversion prediction models
 - [ ] Experiment design for conversion levers (trial exposure, ad load)
 
