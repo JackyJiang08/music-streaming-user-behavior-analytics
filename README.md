@@ -1,23 +1,39 @@
-# Spotify User Behavior & Conversion Optimization
+# Spotify User Behavior Analytics
 
-An end-to-end data analytics project on Spotify-style user behavior, focused on two business problems:
+**End-to-end analytics on music-streaming user behavior: retention diagnostics, free-to-paid conversion, and a reproducible user-level feature/label pipeline.**
 
-1. **Retention** — which behavioral signals (activity level, ad load, content interaction) predict short-term churn?
-2. **Monetization** — where does the free-to-paid subscription funnel break, and which levers (trial exposure, device, engagement) move conversion?
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Stack](https://img.shields.io/badge/stack-SQL%20%7C%20pandas%20%7C%20matplotlib-orange)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-active%20development-brightgreen)
 
-The project builds from SQL-based diagnostics toward a full modeling pipeline: hypothesis-driven analysis, a reproducible user-level feature/label data asset, and (upcoming) EDA, churn/conversion models, and experiment design.
+> **Disclaimer:** This is an independent analytics project built on **simulated data** modeled after a music-streaming service. It is not affiliated with, endorsed by, or based on internal data from Spotify.
 
-> **Status: early stage.** The diagnostic analysis and feature-table construction are in place; EDA, modeling, and experimentation phases are planned next.
+## Overview
+
+A streaming service lives or dies on two numbers: how many users keep listening, and how many free listeners become paying subscribers. This project treats both as measurable, diagnosable problems:
+
+1. **Retention** — which behavioral signals (activity level, ad pressure, content interaction) predict short-term churn, and which user segments are at risk?
+2. **Monetization** — where does the free-to-paid subscription funnel break, and which levers (trial exposure, device experience, engagement depth) move conversion?
+
+The work follows the standard industry arc: SQL-based diagnostics → a leakage-safe user-level feature and label data asset → exploratory analysis and business visualization → (upcoming) churn/conversion models and experiment design.
+
+## Dataset
+
+Five simulated tables covering **50,000 users** and **~1.5M events**:
+
+| Table | Grain | Contents |
+|---|---|---|
+| `users.csv` | user | Demographics, device, acquisition channel, signup date |
+| `listening_events.csv.gz` | event | 1.07M listening logs: sessions, duration, skips, likes, playlist adds |
+| `subscription_events.csv` | event | Trial exposure/start, payments, renewals, cancellations |
+| `ad_events.csv` | event | Ad impressions, clicks, completions, revenue |
+| `feature_table.csv` | user | Prebuilt user-level feature snapshot |
 
 ## Repository Structure
 
 ```
-├── data/
-│   ├── users.csv                  # One row per user: demographics, device, acquisition channel
-│   ├── listening_events.csv.gz    # Event-level listening logs (gzipped; ~118 MB uncompressed)
-│   ├── subscription_events.csv    # Trial, payment, renewal, and cancellation events
-│   ├── ad_events.csv              # Ad impressions, clicks, completions, revenue
-│   └── feature_table.csv          # Prebuilt user-level feature snapshot (one row per user)
+├── data/                          # Source tables (see Dataset above)
 ├── notebooks/
 │   ├── 01_retention_and_conversion_analysis.ipynb
 │   ├── 02_user_feature_table_and_labels.ipynb
@@ -55,8 +71,8 @@ Turns the feature snapshot into business-facing charts: data quality gates (gran
 Everything runs on `pandas + sqlite3` — no database setup required.
 
 ```bash
-git clone https://github.com/JackyJiang08/spotify-user-conversion-optimization.git
-cd spotify-user-conversion-optimization
+git clone https://github.com/JackyJiang08/spotify-user-behavior-analytics.git
+cd spotify-user-behavior-analytics
 pip install -r requirements.txt
 
 # Rebuild the user-level wide table from the raw event tables:
