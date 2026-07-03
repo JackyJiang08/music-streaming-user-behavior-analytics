@@ -27,7 +27,7 @@ The project builds from SQL-based diagnostics toward a full modeling pipeline: h
 ├── sql/
 │   └── build_user_feature_table.sql   # Wide-table definition (single source of truth)
 ├── scripts/
-│   └── build_feature_table.py     # CLI pipeline: build + QA + export the wide table
+│   └── build_user_feature_table.py    # CLI pipeline: build + QA + export the wide table
 └── requirements.txt
 ```
 
@@ -37,7 +37,7 @@ The project builds from SQL-based diagnostics toward a full modeling pipeline: h
 Establishes the business baseline (activity, churn, conversion, cancellation rates), segments users by subscription status and lifecycle stage, and tests five behavioral hypotheses: low activity as a churn signal, ad overload vs. retention (with activity-level controls), trial exposure vs. paid conversion, device differences, and content interaction vs. stickiness. Maps the subscription conversion funnel to locate drop-off points.
 
 **`02_user_feature_table_and_labels.ipynb` — User-Level Feature Table and Label Engineering.**
-Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling. The wide-table SQL is versioned in `sql/build_user_feature_table.sql` and can be run end to end with `python scripts/build_feature_table.py`.
+Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling. The wide-table SQL is versioned in `sql/build_user_feature_table.sql` and can be run end to end with `python scripts/build_user_feature_table.py`.
 
 **`03_eda_and_visualization.ipynb` — Exploratory Analysis and Business Visualization.**
 Turns the feature snapshot into business-facing charts: data quality gates (granularity, missing rates, label levels), derived audience segments (activity level, content engagement, ad-load buckets), and visual diagnostics — churn/conversion baseline, activity vs. churn, the conversion funnel, ad pressure, content engagement, device and acquisition-channel quality, listening-time distributions, engagement scatter, and signup-cohort trends. Each chart is framed by the business question, reading, candidate action, and limitations.
@@ -60,7 +60,7 @@ cd spotify-user-conversion-optimization
 pip install -r requirements.txt
 
 # Rebuild the user-level wide table from the raw event tables:
-python scripts/build_feature_table.py
+python scripts/build_user_feature_table.py
 
 # Or explore interactively:
 jupyter lab notebooks/

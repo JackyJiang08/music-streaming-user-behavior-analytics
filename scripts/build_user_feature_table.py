@@ -4,8 +4,8 @@
 Runs the same SQL as notebooks/02_user_feature_table_and_labels.ipynb
 (sql/build_user_feature_table.sql) end to end from the command line:
 
-    python scripts/build_feature_table.py
-    python scripts/build_feature_table.py --output /path/to/output.csv
+    python scripts/build_user_feature_table.py
+    python scripts/build_user_feature_table.py --output /path/to/output.csv
 """
 
 from __future__ import annotations
