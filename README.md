@@ -7,16 +7,32 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-active%20development-brightgreen)
 
-> **Disclaimer:** This is an independent analytics project built on **simulated data** modeled after a music-streaming service. It is not affiliated with, endorsed by, or based on internal data from Spotify.
+> Independent project built on simulated data. Not affiliated with, endorsed by, or based on internal data from Spotify.
 
 ## Overview
 
-A streaming service lives or dies on two numbers: how many users keep listening, and how many free listeners become paying subscribers. This project treats both as measurable, diagnosable problems:
+This project analyzes the two core commercial questions for a subscription streaming service:
 
-1. **Retention** — which behavioral signals (activity level, ad pressure, content interaction) predict short-term churn, and which user segments are at risk?
-2. **Monetization** — where does the free-to-paid subscription funnel break, and which levers (trial exposure, device experience, engagement depth) move conversion?
+- **Retention** — which behavioral signals (activity level, ad pressure, content interaction) predict short-term churn, and which segments are at risk.
+- **Monetization** — where the free-to-paid subscription funnel breaks, and which levers (trial exposure, device experience, engagement depth) move conversion.
 
-The work follows the standard industry arc: SQL-based diagnostics → a leakage-safe user-level feature and label data asset → exploratory analysis and business visualization → (upcoming) churn/conversion models and experiment design.
+Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → predictive modeling and experiment design (planned).
+
+## Quickstart
+
+```bash
+git clone https://github.com/JackyJiang08/spotify-user-behavior-analytics.git
+cd spotify-user-behavior-analytics
+pip install -r requirements.txt
+
+# Rebuild the user-level wide table from the raw event tables
+python scripts/build_user_feature_table.py
+
+# Or explore interactively
+jupyter lab notebooks/
+```
+
+Runs on `pandas + sqlite3`; no database setup required. All notebooks and scripts load data through `src/data_loader.py`, which auto-discovers `./data` locally or `/content/data` on Colab (override with `SPOTIFY_DATA_DIR`) and reads the gzipped events file directly — nothing needs to be decompressed.
 
 ## Dataset
 
@@ -30,14 +46,23 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 | `ad_events.csv` | event | Ad impressions, clicks, completions, revenue |
 | `feature_table.csv` | user | Prebuilt user-level feature snapshot |
 
+`listening_events` is stored gzipped to stay under GitHub's 100 MB file limit.
+
+## Analysis
+
+| Notebook | Scope | Deliverables |
+|---|---|---|
+| [`01_retention_and_conversion_analysis`](notebooks/01_retention_and_conversion_analysis.ipynb) | Business baseline; lifecycle segmentation; five behavioral hypotheses — activity vs. churn, ad overload, trial exposure, device, content interaction | Retention/conversion baselines, hypothesis readouts, funnel break-point map |
+| [`02_user_feature_table_and_labels`](notebooks/02_user_feature_table_and_labels.ipynb) | Snapshot/observation/prediction window design; event-to-user feature aggregation; leakage-safe 14-day churn and 30-day conversion labels | QA-verified one-row-per-user wide table |
+| [`03_eda_and_visualization`](notebooks/03_eda_and_visualization.ipynb) | Data-quality gates; derived segments (activity, content engagement, ad load); visual diagnostics of churn and conversion drivers | Business charts, each framed as question → reading → action → limitation |
+
+The wide-table definition is versioned once in `sql/build_user_feature_table.sql` and consumed by both notebook 02 and the CLI pipeline `scripts/build_user_feature_table.py` (build → QA → export).
+
 ## Repository Structure
 
 ```
-├── data/                          # Source tables (see Dataset above)
-├── notebooks/
-│   ├── 01_retention_and_conversion_analysis.ipynb
-│   ├── 02_user_feature_table_and_labels.ipynb
-│   └── 03_eda_and_visualization.ipynb
+├── data/                          # Source tables (see Dataset)
+├── notebooks/                     # Analysis notebooks (01-03)
 ├── src/
 │   └── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
 ├── sql/
@@ -47,44 +72,13 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 └── requirements.txt
 ```
 
-## Analysis
-
-**`01_retention_and_conversion_analysis.ipynb` — Retention Overview and Conversion Hypothesis Analysis.**
-Establishes the business baseline (activity, churn, conversion, cancellation rates), segments users by subscription status and lifecycle stage, and tests five behavioral hypotheses: low activity as a churn signal, ad overload vs. retention (with activity-level controls), trial exposure vs. paid conversion, device differences, and content interaction vs. stickiness. Maps the subscription conversion funnel to locate drop-off points.
-
-**`02_user_feature_table_and_labels.ipynb` — User-Level Feature Table and Label Engineering.**
-Designs the snapshot / observation / prediction time-window framework, aggregates listening, ad, and subscription events into user-level features, defines leakage-safe churn (14-day) and paid-conversion (30-day) labels from the prediction window, and QA-checks the assembled wide table (JOIN inflation, label and feature distributions) before exporting it for downstream EDA and modeling. The wide-table SQL is versioned in `sql/build_user_feature_table.sql` and can be run end to end with `python scripts/build_user_feature_table.py`.
-
-**`03_eda_and_visualization.ipynb` — Exploratory Analysis and Business Visualization.**
-Turns the feature snapshot into business-facing charts: data quality gates (granularity, missing rates, label levels), derived audience segments (activity level, content engagement, ad-load buckets), and visual diagnostics — churn/conversion baseline, activity vs. churn, the conversion funnel, ad pressure, content engagement, device and acquisition-channel quality, listening-time distributions, engagement scatter, and signup-cohort trends. Each chart is framed by the business question, reading, candidate action, and limitations.
-
-## Roadmap
+## Project Status
 
 - [x] Retention and conversion diagnostics (SQL)
 - [x] User-level feature table and label engineering
 - [x] Exploratory data analysis and visualization
 - [ ] Churn and paid-conversion prediction models
 - [ ] Experiment design for conversion levers (trial exposure, ad load)
-
-## Getting Started
-
-Everything runs on `pandas + sqlite3` — no database setup required.
-
-```bash
-git clone https://github.com/JackyJiang08/spotify-user-behavior-analytics.git
-cd spotify-user-behavior-analytics
-pip install -r requirements.txt
-
-# Rebuild the user-level wide table from the raw event tables:
-python scripts/build_user_feature_table.py
-
-# Or explore interactively:
-jupyter lab notebooks/
-```
-
-All notebooks and scripts share one data path (`src/data_loader.py`), which auto-discovers the data in `./data` (local) or `/content/data` (Colab) and reads the gzipped `listening_events.csv.gz` directly. Set `SPOTIFY_DATA_DIR` to point somewhere else.
-
-> `listening_events.csv.gz` is stored gzipped to stay under GitHub's 100 MB file limit; nothing needs to be decompressed to run the project.
 
 ## License
 
