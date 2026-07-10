@@ -55,6 +55,7 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 | [`01_retention_and_conversion_analysis`](notebooks/01_retention_and_conversion_analysis.ipynb) | Business baseline; lifecycle segmentation; five behavioral hypotheses — activity vs. churn, ad overload, trial exposure, device, content interaction | Retention/conversion baselines, hypothesis readouts, funnel break-point map |
 | [`02_user_feature_table_and_labels`](notebooks/02_user_feature_table_and_labels.ipynb) | Snapshot/observation/prediction window design; event-to-user feature aggregation; leakage-safe 14-day churn and 30-day conversion labels | QA-verified one-row-per-user wide table |
 | [`03_eda_and_visualization`](notebooks/03_eda_and_visualization.ipynb) | Data-quality gates; derived segments (activity, content engagement, ad load); visual diagnostics of churn and conversion drivers | Business charts, each framed as question → reading → action → limitation |
+| [`04_advanced_eda_contribution_and_mix_shift`](notebooks/04_advanced_eda_contribution_and_mix_shift.ipynb) | Rate vs. contribution prioritization; cohort quality drift by signup month; mix-shift decomposition of overall conversion change into mix and performance effects | Segment prioritization view, cohort trend readout, additive decomposition table |
 
 The wide-table definition is versioned once in `sql/build_user_feature_table.sql` and consumed by both notebook 02 and the CLI pipeline `scripts/build_user_feature_table.py` (build → QA → export).
 
@@ -77,6 +78,7 @@ The wide-table definition is versioned once in `sql/build_user_feature_table.sql
 - [x] Retention and conversion diagnostics (SQL)
 - [x] User-level feature table and label engineering
 - [x] Exploratory data analysis and visualization
+- [x] Advanced EDA: contribution analysis, cohort drift, mix-shift decomposition
 - [ ] Churn and paid-conversion prediction models
 - [ ] Experiment design for conversion levers (trial exposure, ad load)
 
