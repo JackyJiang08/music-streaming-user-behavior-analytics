@@ -18,6 +18,18 @@ This project analyzes the two core commercial questions for a subscription strea
 
 Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → predictive modeling and experiment design (planned).
 
+## Key Findings
+
+Against a baseline of **47.6%** 14-day churn and **17.4%** 30-day paid conversion:
+
+- **Usage habit dominates both problems.** Churn runs 69.6% for low-activity users vs. 11.6% for high-activity ones — and the low-activity segment also contributes **61%** of all churned users, so risk rate and volume point at the same intervention target.
+- **Content engagement halves churn.** Users with any playlist or liked-song activity churn at 29.4% vs. 62.8% without.
+- **The subscription funnel breaks at the last step:** 31,255 free/trial users narrow to 2,681 trial starts but only 30 in-window paid conversions.
+- **Referral is the quality acquisition channel** (22.8% conversion, 36.1% churn); paid social underperforms on every metric (12.6% conversion, 60.2% churn).
+- **Recent conversion gains are performance-driven, not mix-driven:** +3.5pp overall decomposes into +3.7pp within-group improvement and −0.2pp user-structure change, with no cohort-quality drift.
+
+Full evidence, charts, and caveats in the Key Findings sections of [notebook 03](notebooks/03_eda_and_visualization.ipynb) and [notebook 04](notebooks/04_advanced_eda_contribution_and_mix_shift.ipynb).
+
 ## Quickstart
 
 ```bash
