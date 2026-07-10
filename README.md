@@ -62,14 +62,14 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 
 ## Analysis
 
-| Notebook | Scope | Deliverables |
-|---|---|---|
-| [`01_retention_and_conversion_analysis`](notebooks/01_retention_and_conversion_analysis.ipynb) | Business baseline; lifecycle segmentation; five behavioral hypotheses — activity vs. churn, ad overload, trial exposure, device, content interaction | Retention/conversion baselines, hypothesis readouts, funnel break-point map |
-| [`02_user_feature_table_and_labels`](notebooks/02_user_feature_table_and_labels.ipynb) | Snapshot/observation/prediction window design; event-to-user feature aggregation; leakage-safe 14-day churn and 30-day conversion labels | QA-verified one-row-per-user wide table |
-| [`03_eda_and_visualization`](notebooks/03_eda_and_visualization.ipynb) | Data-quality gates; derived segments (activity, content engagement, ad load); visual diagnostics of churn and conversion drivers | Business charts, each framed as question → reading → action → limitation |
-| [`04_advanced_eda_contribution_and_mix_shift`](notebooks/04_advanced_eda_contribution_and_mix_shift.ipynb) | Rate vs. contribution prioritization; cohort quality drift by signup month; mix-shift decomposition of overall conversion change into mix and performance effects | Segment prioritization view, cohort trend readout, additive decomposition table |
+| Notebook | Purpose |
+|---|---|
+| [`01_retention_and_conversion_analysis`](notebooks/01_retention_and_conversion_analysis.ipynb) | SQL diagnostics: baseline metrics, five behavioral hypotheses, funnel break points |
+| [`02_user_feature_table_and_labels`](notebooks/02_user_feature_table_and_labels.ipynb) | Builds the leakage-safe, one-row-per-user feature table with churn and conversion labels |
+| [`03_eda_and_visualization`](notebooks/03_eda_and_visualization.ipynb) | Visual diagnostics of churn and conversion drivers across segments, devices, channels, and cohorts |
+| [`04_advanced_eda_contribution_and_mix_shift`](notebooks/04_advanced_eda_contribution_and_mix_shift.ipynb) | Segment prioritization (rate vs. contribution), cohort quality drift, mix-shift decomposition |
 
-The wide-table definition is versioned once in `sql/build_user_feature_table.sql` and consumed by both notebook 02 and the CLI pipeline `scripts/build_user_feature_table.py` (build → QA → export).
+Each notebook opens with its scope; notebooks 03 and 04 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
 
 ## Repository Structure
 
