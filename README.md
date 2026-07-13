@@ -1,4 +1,4 @@
-# Spotify User Behavior Analytics
+# Music-Streaming User Behavior Analytics
 
 **End-to-end analytics on music-streaming user behavior: retention diagnostics, free-to-paid conversion, and a reproducible user-level feature/label pipeline.**
 
@@ -7,7 +7,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-active%20development-brightgreen)
 
-> Independent project built on simulated data. Not affiliated with, endorsed by, or based on internal data from Spotify.
+> Independent project built on simulated data. Not affiliated with, endorsed by, or based on internal data from any music-streaming service.
 
 ## Overview
 
@@ -33,8 +33,8 @@ Full evidence, charts, and caveats in the Key Findings sections of [notebook 03]
 ## Quickstart
 
 ```bash
-git clone https://github.com/JackyJiang08/spotify-user-behavior-analytics.git
-cd spotify-user-behavior-analytics
+git clone https://github.com/JackyJiang08/music-streaming-user-behavior-analytics.git
+cd music-streaming-user-behavior-analytics
 pip install -r requirements.txt
 
 # Rebuild the user-level wide table from the raw event tables
@@ -44,7 +44,7 @@ python scripts/build_user_feature_table.py
 jupyter lab notebooks/
 ```
 
-Runs on `pandas + sqlite3`; no database setup required. All notebooks and scripts load data through `src/data_loader.py`, which auto-discovers `./data` locally or `/content/data` on Colab (override with `SPOTIFY_DATA_DIR`) and reads the gzipped events file directly — nothing needs to be decompressed.
+Runs on `pandas + sqlite3`; no database setup required. All notebooks and scripts load data through `src/data_loader.py`, which auto-discovers `./data` locally or `/content/data` on Colab (override with `STREAMING_DATA_DIR`) and reads the gzipped events file directly — nothing needs to be decompressed.
 
 ## Dataset
 

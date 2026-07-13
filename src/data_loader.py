@@ -1,4 +1,4 @@
-"""Data loading utilities for the Spotify user conversion project.
+"""Data loading utilities for the music-streaming user conversion project.
 
 Loads the five project tables into pandas and registers them in an in-memory
 SQLite database, so every notebook and script queries the same schema through
@@ -30,7 +30,7 @@ TABLES = {
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Searched in order; the SPOTIFY_DATA_DIR environment variable wins if set.
+# Searched in order; the STREAMING_DATA_DIR environment variable wins if set.
 _CANDIDATE_DIRS = [
     REPO_ROOT / "data",
     Path("/content/data"),  # Colab upload target
@@ -39,7 +39,7 @@ _CANDIDATE_DIRS = [
 
 def find_data_dir() -> Path:
     """Locate the directory holding the project CSVs."""
-    env_dir = os.environ.get("SPOTIFY_DATA_DIR")
+    env_dir = os.environ.get("STREAMING_DATA_DIR")
     candidates = [Path(env_dir)] if env_dir else _CANDIDATE_DIRS
     for d in candidates:
         if d.is_dir():
@@ -47,7 +47,7 @@ def find_data_dir() -> Path:
     raise FileNotFoundError(
         "Could not find the data directory. Expected one of: "
         + ", ".join(str(d) for d in candidates)
-        + ". Set the SPOTIFY_DATA_DIR environment variable to override."
+        + ". Set the STREAMING_DATA_DIR environment variable to override."
     )
 
 
