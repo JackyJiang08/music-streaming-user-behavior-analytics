@@ -3,3 +3,4 @@
 .ipynb_checkpoints/
 __pycache__/
 data/user_feature_table.csv
+.venv/
