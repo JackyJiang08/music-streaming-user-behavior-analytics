@@ -95,7 +95,9 @@ Each notebook opens with its scope; notebooks 03–05 close with data-grounded K
 - [x] Advanced EDA: contribution analysis, cohort drift, mix-shift decomposition
 - [x] Churn prediction model: training, evaluation, threshold tuning, risk segmentation
 - [ ] Paid-conversion prediction model
-- [ ] Experiment design for conversion levers (trial exposure, ad load)
+- [ ] A/B test design and analysis for retention/conversion levers (simulated treatment effects)
+
+*Candidate extensions under consideration: gradient-boosting comparison, uplift modeling, survival analysis.*
 
 ## License
 
