@@ -16,7 +16,9 @@ This project analyzes the two core commercial questions for a subscription strea
 - **Retention** — which behavioral signals (activity level, ad pressure, content interaction) predict short-term churn, and which segments are at risk.
 - **Monetization** — where the free-to-paid subscription funnel breaks, and which levers (trial exposure, device experience, engagement depth) move conversion.
 
-Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → churn prediction modeling and a gradient-boosting bake-off → A/B test design and analysis → survival analysis of time-to-churn → conversion modeling (planned).
+Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → churn prediction modeling and a gradient-boosting bake-off → A/B test design and analysis → survival analysis of time-to-churn → uplift modeling and targeting → conversion modeling (planned).
+
+**Causal analysis storyline (notebooks 06 → 09):** a simulated randomized experiment with known injected effects first answers *whether* to launch (notebook 06: +2.6pp retention on average, but a skip-rate guardrail breach — don't ship to everyone), then *to whom* (notebook 09: hand-rolled S/T/X meta-learners estimate each user's individual treatment effect, validated against the simulation's stored ground truth, and yield a targeting policy that captures 70% of the launch value with 38% of the exposure and none of the known-harmed users).
 
 ## Key Findings
 
@@ -30,6 +32,7 @@ Against a baseline of **47.6%** 14-day churn and **17.4%** 30-day paid conversio
 - **Churn is predictable with an interpretable model:** a class-balanced logistic regression reaches ROC-AUC 0.788, catching 78% of churners at 66% precision — and beats a tuned random forest, so explainability costs nothing. Model-based risk tiers are monotonically calibrated (17% / 55% / 79% actual churn).
 - **Model complexity bought nothing:** three tuned gradient-boosting models (XGBoost, LightGBM, HistGB) land within ±0.07pp ROC-AUC of the logistic baseline, with paired-bootstrap CIs straddling zero and identical top-4 churn drivers — the interpretable model keeps the job.
 - **Statistical significance is not a launch decision:** a simulated home-screen experiment lifts 14-day retention by +2.6pp (p < 0.001) yet breaches its skip-rate guardrail (+13% relative), so the verdict is iterate-and-retest, not ship. The win concentrates in low-activity listeners (+4.4pp); daily peeking would have inflated the false-positive rate from 5% to ~20%.
+- **Targeting beats blanket rollout:** an X-learner uplift model (rank correlation 0.45 with the simulation's true effects) plus the experiment-proven skip-rate exclusion targets 38% of users for ~70% of the full-launch retention value — and shows why model scores never replace guardrails: a −1.5pp harmed minority stays invisible to the model at this sample size.
 - **Churn has a clock:** half of a signup cohort disengages within 35 days, and 45% of churn-defining silences begin in week 1 — so onboarding nudges belong in days 0–3, not at day 14. The referral vs paid-social quality gap *widens* over time (Cox HR 0.77 vs 1.23 after day 30), while device makes no difference to churn timing (log-rank p = 0.37).
 
 Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–06](notebooks/).
@@ -82,8 +85,9 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 | [`06_ab_test_design_and_analysis`](notebooks/06_ab_test_design_and_analysis.ipynb) | A/B test with simulated treatment effects: power analysis, SRM gate, metric scorecard, pitfalls (peeking, multiple testing, novelty), segment drill-down, launch decision |
 | [`07_gradient_boosting_churn_comparison`](notebooks/07_gradient_boosting_churn_comparison.ipynb) | GBM bake-off (HistGB, XGBoost, LightGBM) vs the logistic baseline on the frozen notebook-05 protocol: paired-bootstrap AUC deltas, calibration, driver agreement, operating-point economics |
 | [`08_survival_analysis_time_to_churn`](notebooks/08_survival_analysis_time_to_churn.ipynb) | Time-to-churn: Kaplan-Meier by segment, log-rank tests, Cox hazards with PH diagnostics, held-out C-index, and survival-derived intervention windows |
+| [`09_uplift_modeling_targeting`](notebooks/09_uplift_modeling_targeting.ipynb) | Individual treatment effects with hand-rolled S/T/X meta-learners: Qini evaluation, ground-truth validation, and a guardrail-aware targeting policy |
 
-Each notebook opens with its scope; notebooks 03–08 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
+Each notebook opens with its scope; notebooks 03–09 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
 
 ## Repository Structure
 
@@ -97,7 +101,8 @@ Each notebook opens with its scope; notebooks 03–08 close with data-grounded K
 │   ├── experiment_simulation.py   # Simulated experiment with injected ground-truth effects
 │   ├── churn_modeling.py          # Frozen notebook-05 modeling protocol (split, features, preprocessing)
 │   ├── model_evaluation.py        # Evaluation harness: metrics table, calibration, paired bootstrap
-│   └── survival_analysis.py       # lifelines wrappers: KM, log-rank, Cox, PH check, C-index
+│   ├── survival_analysis.py       # lifelines wrappers: KM, log-rank, Cox, PH check, C-index
+│   └── uplift_modeling.py         # S/T/X meta-learners + Qini/decile/gain evaluation (pure sklearn)
 ├── sql/
 │   ├── build_user_feature_table.sql   # Wide-table definition (single source of truth)
 │   ├── ab_test_population.sql         # Experiment eligibility cohort
@@ -119,9 +124,8 @@ Each notebook opens with its scope; notebooks 03–08 close with data-grounded K
 - [x] A/B test design and analysis for retention/conversion levers (simulated treatment effects)
 - [x] Gradient-boosting comparison (HistGB, XGBoost, LightGBM) with paired-bootstrap evaluation
 - [x] Survival analysis: time-to-churn, Cox hazards, intervention windows
+- [x] Uplift modeling: individual treatment effects and guardrail-aware targeting policy
 - [ ] Paid-conversion prediction model
-
-*Candidate extensions under consideration: uplift modeling.*
 
 ## License
 
