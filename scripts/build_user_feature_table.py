@@ -46,10 +46,7 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     wide_df.to_csv(args.output, index=False)
-    print(
-        f"Wrote {len(wide_df):,} users x {wide_df.shape[1]} columns "
-        f"to {args.output}"
-    )
+    print(f"Wrote {len(wide_df):,} users x {wide_df.shape[1]} columns to {args.output}")
 
 
 if __name__ == "__main__":

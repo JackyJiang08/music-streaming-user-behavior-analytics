@@ -26,29 +26,58 @@ CONVERSION_SQL = (REPO_ROOT / "sql" / "build_conversion_table.sql").read_text()
 # The SQL itself on a synthetic event log (landmark = 2026-03-02)
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def conversion_from_synthetic_log() -> pd.DataFrame:
     users = pd.DataFrame(
         [
             # A: never paid, converts in label window -> label 1
-            ("A", "2026-01-05", "mobile_ios", "referral", "US", "18-24", "explorer", 1, 1),
+            (
+                "A",
+                "2026-01-05",
+                "mobile_ios",
+                "referral",
+                "US",
+                "18-24",
+                "explorer",
+                1,
+                1,
+            ),
             # B: paid BEFORE the landmark -> excluded from population
             ("B", "2026-01-05", "web", "paid_social", "UK", "25-34", "commuter", 0, 0),
             # C: never paid, no conversion -> label 0
             ("C", "2026-02-10", "desktop", "app_store", "US", "35-44", "casual", 0, 1),
             # D: signed up after the landmark -> excluded
-            ("D", "2026-03-10", "mobile_ios", "referral", "US", "18-24", "explorer", 0, 0),
+            (
+                "D",
+                "2026-03-10",
+                "mobile_ios",
+                "referral",
+                "US",
+                "18-24",
+                "explorer",
+                0,
+                0,
+            ),
         ],
-        columns=["user_id", "signup_date", "primary_device", "acquisition_channel",
-                 "country", "age_group", "music_persona", "student_eligible",
-                 "marketing_opt_in"],
+        columns=[
+            "user_id",
+            "signup_date",
+            "primary_device",
+            "acquisition_channel",
+            "country",
+            "age_group",
+            "music_persona",
+            "student_eligible",
+            "marketing_opt_in",
+        ],
     )
     subscription_events = pd.DataFrame(
         [
             ("B", "2026-02-01 10:00:00", "paid_started"),
-            ("A", "2026-02-15 10:00:00", "trial_started"),   # pre-landmark funnel
-            ("A", "2026-03-10 10:00:00", "paid_started"),    # label window
-            ("C", "2026-04-20 10:00:00", "paid_started"),    # after label window
+            ("A", "2026-02-15 10:00:00", "trial_started"),  # pre-landmark funnel
+            ("A", "2026-03-10 10:00:00", "paid_started"),  # label window
+            ("C", "2026-04-20 10:00:00", "paid_started"),  # after label window
         ],
         columns=["user_id", "event_timestamp", "event_type"],
     )
@@ -61,9 +90,18 @@ def conversion_from_synthetic_log() -> pd.DataFrame:
             # C: event before the feature window opens (must not count).
             ("C", "2026-01-15 09:00:00", "C_s1", 200, 50, 0, 1, 0, 0, 0),
         ],
-        columns=["user_id", "event_timestamp", "session_id", "track_duration_sec",
-                 "play_duration_sec", "completed_flag", "skipped_flag",
-                 "liked_flag", "playlist_add_flag", "search_used_flag"],
+        columns=[
+            "user_id",
+            "event_timestamp",
+            "session_id",
+            "track_duration_sec",
+            "play_duration_sec",
+            "completed_flag",
+            "skipped_flag",
+            "liked_flag",
+            "playlist_add_flag",
+            "search_used_flag",
+        ],
     )
     ad_events = pd.DataFrame(
         [("A", "2026-02-21 09:00:00", 1, 0.01), ("A", "2026-03-06 09:00:00", 1, 0.01)],
@@ -75,7 +113,9 @@ def conversion_from_synthetic_log() -> pd.DataFrame:
     listening_events.to_sql("listening_events", conn, index=False)
     ad_events.to_sql("ad_events", conn, index=False)
     conn.executescript(CONVERSION_SQL)
-    return pd.read_sql_query("SELECT * FROM conversion_table", conn).set_index("user_id")
+    return pd.read_sql_query("SELECT * FROM conversion_table", conn).set_index(
+        "user_id"
+    )
 
 
 def test_sql_population_excludes_already_paid_and_post_landmark_signups(
@@ -92,8 +132,8 @@ def test_sql_label_windows(conversion_from_synthetic_log):
 
 def test_sql_features_stop_at_the_landmark(conversion_from_synthetic_log):
     row = conversion_from_synthetic_log.loc["A"]
-    assert row["listen_events_w"] == 1      # post-landmark event excluded
-    assert row["ad_impressions_w"] == 1     # post-landmark impression excluded
+    assert row["listen_events_w"] == 1  # post-landmark event excluded
+    assert row["ad_impressions_w"] == 1  # post-landmark impression excluded
     assert row["trial_started_pre"] == 1
     # C's only listening event predates the feature window.
     assert conversion_from_synthetic_log.loc["C", "listen_events_w"] == 0
@@ -102,14 +142,18 @@ def test_sql_features_stop_at_the_landmark(conversion_from_synthetic_log):
 def test_feature_lists_resolve_on_the_real_sql_schema(conversion_from_synthetic_log):
     # Schema-only check: every declared feature must exist in the view the
     # real SQL produces (no full-dataset training involved).
-    missing = [c for c in NUMERIC_FEATURES + CATEGORICAL_FEATURES
-               if c not in conversion_from_synthetic_log.reset_index().columns]
+    missing = [
+        c
+        for c in NUMERIC_FEATURES + CATEGORICAL_FEATURES
+        if c not in conversion_from_synthetic_log.reset_index().columns
+    ]
     assert missing == []
 
 
 # ---------------------------------------------------------------------------
 # Leakage guard and QA
 # ---------------------------------------------------------------------------
+
 
 def test_leakage_guard_raises_on_label_encoding_column():
     with pytest.raises(ValueError, match="leakage guard"):
@@ -134,18 +178,21 @@ def test_qa_check_rejects_bad_tables():
 # Split determinism
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def prepared_table() -> pd.DataFrame:
     rng = np.random.default_rng(0)
     n = 400
-    frame = pd.DataFrame({
-        "user_id": [f"U{i:04d}" for i in range(n)],
-        TARGET_COL: (rng.random(n) < 0.2).astype(int),
-        "active_days_w": rng.integers(0, 28, n),
-        "listen_minutes_w": rng.gamma(2, 20, n),
-        "device": rng.choice(["mobile_ios", "web"], n),
-        "acquisition_channel": rng.choice(["referral", "paid_social"], n),
-    })
+    frame = pd.DataFrame(
+        {
+            "user_id": [f"U{i:04d}" for i in range(n)],
+            TARGET_COL: (rng.random(n) < 0.2).astype(int),
+            "active_days_w": rng.integers(0, 28, n),
+            "listen_minutes_w": rng.gamma(2, 20, n),
+            "device": rng.choice(["mobile_ios", "web"], n),
+            "acquisition_channel": rng.choice(["referral", "paid_social"], n),
+        }
+    )
     return frame
 
 

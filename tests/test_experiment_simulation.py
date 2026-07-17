@@ -23,8 +23,11 @@ def population() -> pd.DataFrame:
     """
     rng = np.random.default_rng(1)
     n = 8_000
-    active_days = rng.choice([0, 1, 2, 4, 6, 8, 12, 20], size=n,
-                             p=[0.10, 0.12, 0.10, 0.14, 0.14, 0.12, 0.14, 0.14])
+    active_days = rng.choice(
+        [0, 1, 2, 4, 6, 8, 12, 20],
+        size=n,
+        p=[0.10, 0.12, 0.10, 0.14, 0.14, 0.12, 0.14, 0.14],
+    )
     skip = np.clip(rng.normal(0.16, 0.10, n), 0, 0.9)
     skip[rng.random(n) < 0.13] = 0.5  # carve out a high-skipper segment
     churn_prob = np.clip(0.8 - 0.04 * active_days, 0.1, 0.9)
@@ -85,7 +88,11 @@ def test_non_retained_users_have_no_post_activity(population):
 
 def test_cancel_only_defined_for_trial_users(population):
     out = simulate_experiment(population)
-    assert out.loc[out["current_subscription_type"] == "free", "cancel_14d_post"].isna().all()
+    assert (
+        out.loc[out["current_subscription_type"] == "free", "cancel_14d_post"]
+        .isna()
+        .all()
+    )
     trial = out.loc[out["current_subscription_type"] == "trial", "cancel_14d_post"]
     assert trial.notna().all()
     assert trial.isin([0.0, 1.0]).all()
@@ -103,8 +110,9 @@ def test_simulation_rejects_missing_columns(population):
 
 
 def test_novelty_trajectory_decays_toward_long_run():
-    df = simulate_novelty_trajectory(n_per_arm=20_000, mean_weekly_minutes=25,
-                                     n_weeks=6, seed=9)
+    df = simulate_novelty_trajectory(
+        n_per_arm=20_000, mean_weekly_minutes=25, n_weeks=6, seed=9
+    )
     assert len(df) == 6
     assert df["true_rel_lift"].is_monotonic_decreasing
     assert df["rel_lift"].iloc[0] > df["rel_lift"].iloc[-1]

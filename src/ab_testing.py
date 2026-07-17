@@ -28,10 +28,10 @@ from statsmodels.stats.proportion import confint_proportions_2indep, proportions
 
 from src.config import RANDOM_SEED
 
-
 # ---------------------------------------------------------------------------
 # Design: sample size and minimum detectable effect
 # ---------------------------------------------------------------------------
+
 
 def required_sample_size(
     baseline_rate: float,
@@ -98,6 +98,7 @@ def minimum_detectable_effect(
 # ---------------------------------------------------------------------------
 # Assignment and sample-ratio-mismatch check
 # ---------------------------------------------------------------------------
+
 
 def assign_groups(
     user_ids: Sequence[str],
@@ -181,6 +182,7 @@ def srm_check(
 # ---------------------------------------------------------------------------
 # Statistical tests
 # ---------------------------------------------------------------------------
+
 
 @dataclass(frozen=True)
 class TestResult:
@@ -294,6 +296,7 @@ def mean_diff_test(
 # Scorecard
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class MetricSpec:
     """One experiment metric: where it lives and how to read it."""
@@ -366,6 +369,7 @@ def summarize_experiment(
 # Peeking (sequential looks)
 # ---------------------------------------------------------------------------
 
+
 def sequential_pvalues(
     control_outcomes: Sequence[int],
     treatment_outcomes: Sequence[int],
@@ -391,8 +395,9 @@ def sequential_pvalues(
         n_c = int(round(len(x_c) * k / n_looks))
         n_t = int(round(len(x_t) * k / n_looks))
         result = proportion_ztest(int(x_c[:n_c].sum()), n_c, int(x_t[:n_t].sum()), n_t)
-        rows.append({"look": k, "n_control": n_c, "n_treatment": n_t,
-                     "p_value": result.p_value})
+        rows.append(
+            {"look": k, "n_control": n_c, "n_treatment": n_t, "p_value": result.p_value}
+        )
     return pd.DataFrame(rows)
 
 
@@ -421,12 +426,18 @@ def peeking_false_positive_rate(
         raise ValueError(f"true_rate must be in (0, 1), got {true_rate}")
 
     rng = np.random.default_rng(seed)
-    look_sizes = np.linspace(n_per_arm / n_looks, n_per_arm, n_looks).round().astype(int)
+    look_sizes = (
+        np.linspace(n_per_arm / n_looks, n_per_arm, n_looks).round().astype(int)
+    )
     increments = np.diff(look_sizes, prepend=0)
 
     # successes[sim, look] = cumulative conversions per arm at each look
-    succ_c = rng.binomial(increments, true_rate, size=(n_simulations, n_looks)).cumsum(axis=1)
-    succ_t = rng.binomial(increments, true_rate, size=(n_simulations, n_looks)).cumsum(axis=1)
+    succ_c = rng.binomial(increments, true_rate, size=(n_simulations, n_looks)).cumsum(
+        axis=1
+    )
+    succ_t = rng.binomial(increments, true_rate, size=(n_simulations, n_looks)).cumsum(
+        axis=1
+    )
     n_cum = look_sizes[np.newaxis, :]
 
     p_c = succ_c / n_cum

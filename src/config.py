@@ -21,5 +21,5 @@ OBSERVATION_START: str = "2026-03-02"
 OBSERVATION_END: str = SNAPSHOT_DATE
 
 # Label windows measured after the snapshot.
-CHURN_WINDOW_DAYS: int = 14   # churn = no listening activity in this window
+CHURN_WINDOW_DAYS: int = 14  # churn = no listening activity in this window
 CONVERSION_WINDOW_DAYS: int = 30  # conversion = paid start within this window

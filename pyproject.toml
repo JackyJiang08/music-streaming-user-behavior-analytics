@@ -1,0 +1,23 @@
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+# Notebooks are narrative artifacts with embedded outputs; formatting churn
+# there would bloat diffs without improving the code they demonstrate.
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # import sorting
+    "B",  # bugbear
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Notebook-support scripts insert the repo root before importing src.
+"scripts/*" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

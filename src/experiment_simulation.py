@@ -129,8 +129,9 @@ def load_eligible_population(data_dir: Path | str | None = None) -> pd.DataFrame
 
 def label_effect_segment(population: pd.DataFrame) -> pd.Series:
     """Observable segment driving the heterogeneous retention effect."""
-    missing = [c for c in ("skip_rate_30d", "active_days_30d")
-               if c not in population.columns]
+    missing = [
+        c for c in ("skip_rate_30d", "active_days_30d") if c not in population.columns
+    ]
     if missing:
         raise ValueError(f"population is missing required columns: {missing}")
     return pd.Series(
@@ -321,9 +322,9 @@ def main() -> None:
     results.to_csv(output, index=False, compression="gzip")
 
     lift = (
-        results.groupby("group")["retained_14d_post"].mean().pipe(
-            lambda s: s["treatment"] - s["control"]
-        )
+        results.groupby("group")["retained_14d_post"]
+        .mean()
+        .pipe(lambda s: s["treatment"] - s["control"])
     )
     print(
         f"Wrote {len(results):,} users x {results.shape[1]} columns to {output}\n"

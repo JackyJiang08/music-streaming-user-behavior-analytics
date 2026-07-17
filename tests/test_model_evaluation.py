@@ -42,8 +42,14 @@ def test_evaluate_models_shape_and_columns(synthetic_problem):
     table = evaluate_models({"good": good, "noise": _NoiseWrapper()}, X, y)
     assert list(table["model"]) == ["good", "noise"]
     assert set(table.columns) == {
-        "model", "roc_auc", "pr_auc", "brier", "precision_at_threshold",
-        "recall_at_threshold", "f1_at_threshold", "flagged_share",
+        "model",
+        "roc_auc",
+        "pr_auc",
+        "brier",
+        "precision_at_threshold",
+        "recall_at_threshold",
+        "f1_at_threshold",
+        "flagged_share",
     }
     assert table.loc[0, "roc_auc"] > table.loc[1, "roc_auc"]
 
@@ -75,8 +81,9 @@ def test_paired_bootstrap_detects_a_real_auc_gap(synthetic_problem):
     proba_strong = strong.predict_proba(X[["x_strong"]].to_numpy())[:, 1]
     proba_weak = weak.predict_proba(X[["x_noise"]].to_numpy())[:, 1]
 
-    result = paired_bootstrap_auc_delta(y, proba_weak, proba_strong,
-                                        n_bootstrap=500, seed=1)
+    result = paired_bootstrap_auc_delta(
+        y, proba_weak, proba_strong, n_bootstrap=500, seed=1
+    )
     true_delta = roc_auc_score(y, proba_strong) - roc_auc_score(y, proba_weak)
     assert result.delta == pytest.approx(true_delta)
     assert result.ci_low <= true_delta <= result.ci_high
@@ -134,7 +141,7 @@ def test_lift_table_matches_hand_computation():
     table = lift_table(y, proba, fractions=[0.2, 0.5])
     top2 = table.iloc[0]
     assert top2["n_contacted"] == 2
-    assert top2["precision"] == 1.0            # both top-2 are positives
+    assert top2["precision"] == 1.0  # both top-2 are positives
     assert top2["share_of_positives_captured"] == pytest.approx(2 / 3)
     assert top2["lift_vs_random"] == pytest.approx(1.0 / 0.3)
     with pytest.raises(ValueError, match="fractions"):

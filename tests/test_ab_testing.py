@@ -19,10 +19,10 @@ from src.ab_testing import (
     summarize_experiment,
 )
 
-
 # ---------------------------------------------------------------------------
 # Sample size and MDE
 # ---------------------------------------------------------------------------
+
 
 def test_sample_size_matches_textbook_value():
     # Fleiss et al.: p=0.50 vs 0.52, alpha=0.05, power=0.80 -> ~9,807 per arm.
@@ -57,6 +57,7 @@ def test_mde_shrinks_with_more_users():
 # Assignment and SRM
 # ---------------------------------------------------------------------------
 
+
 def test_assignment_is_deterministic_and_balanced():
     ids = [f"U{i:05d}" for i in range(10_000)]
     a = assign_groups(ids, seed=7)
@@ -83,6 +84,7 @@ def test_srm_passes_a_fair_split_and_flags_a_rigged_one():
 # ---------------------------------------------------------------------------
 # Statistical tests
 # ---------------------------------------------------------------------------
+
 
 def test_proportion_ztest_matches_hand_computed_case():
     # 100/1000 vs 150/1000: pooled p=0.125, se=0.014790 -> z=3.381, p=0.00072.
@@ -121,6 +123,7 @@ def test_mean_diff_test_requires_enough_values():
 # Scorecard
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def experiment_frame() -> pd.DataFrame:
     rng = np.random.default_rng(3)
@@ -138,7 +141,9 @@ def test_summarize_experiment_scorecard(experiment_frame):
     scorecard = summarize_experiment(
         experiment_frame,
         [
-            MetricSpec("retention_14d", "retained", "proportion", "primary", "increase"),
+            MetricSpec(
+                "retention_14d", "retained", "proportion", "primary", "increase"
+            ),
             MetricSpec("skip_rate", "skip_rate", "mean", "guardrail", "decrease"),
         ],
     )
@@ -162,6 +167,7 @@ def test_summarize_experiment_validates_inputs(experiment_frame):
 # ---------------------------------------------------------------------------
 # Peeking
 # ---------------------------------------------------------------------------
+
 
 def test_sequential_pvalues_trajectory_shape_and_final_look():
     rng = np.random.default_rng(4)

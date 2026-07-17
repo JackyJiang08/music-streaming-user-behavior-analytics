@@ -32,7 +32,10 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from sklearn.base import clone
-from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 
 from src.ab_testing import srm_check
 from src.churn_modeling import TUNED_GBM_PARAMS
@@ -44,13 +47,15 @@ _DEFAULT_BASE_PARAMS = TUNED_GBM_PARAMS
 
 
 def _default_classifier(random_state: int) -> HistGradientBoostingClassifier:
-    return HistGradientBoostingClassifier(random_state=random_state,
-                                          **_DEFAULT_BASE_PARAMS)
+    return HistGradientBoostingClassifier(
+        random_state=random_state, **_DEFAULT_BASE_PARAMS
+    )
 
 
 def _default_regressor(random_state: int) -> HistGradientBoostingRegressor:
-    return HistGradientBoostingRegressor(random_state=random_state,
-                                         **_DEFAULT_BASE_PARAMS)
+    return HistGradientBoostingRegressor(
+        random_state=random_state, **_DEFAULT_BASE_PARAMS
+    )
 
 
 def _validate_fit_inputs(
@@ -97,9 +102,7 @@ class SLearner:
     def fit(self, X, treatment, y) -> "SLearner":
         X, treatment, y = _validate_fit_inputs(X, treatment, y)
         base = self.base_classifier or _default_classifier(self.random_state)
-        self.model_ = clone(base).fit(
-            np.column_stack([X, treatment]), y
-        )
+        self.model_ = clone(base).fit(np.column_stack([X, treatment]), y)
         return self
 
     def predict_uplift(self, X) -> np.ndarray:
@@ -146,8 +149,9 @@ class XLearner:
     imbalanced or effects are smooth; costs four model fits.
     """
 
-    def __init__(self, base_classifier=None, base_regressor=None,
-                 random_state: int = RANDOM_SEED):
+    def __init__(
+        self, base_classifier=None, base_regressor=None, random_state: int = RANDOM_SEED
+    ):
         self.base_classifier = base_classifier
         self.base_regressor = base_regressor
         self.random_state = random_state
@@ -185,6 +189,7 @@ class XLearner:
 # Evaluation
 # ---------------------------------------------------------------------------
 
+
 def _validate_eval_inputs(y, treatment, uplift_scores):
     y = np.asarray(y)
     treatment = np.asarray(treatment)
@@ -215,7 +220,8 @@ def uplift_by_decile(
     # rank first so duplicate score values cannot collapse bins
     frame["decile"] = pd.qcut(
         frame["score"].rank(method="first", ascending=False),
-        q=n_bins, labels=range(1, n_bins + 1),
+        q=n_bins,
+        labels=range(1, n_bins + 1),
     )
     rows = []
     for decile, group in frame.groupby("decile", observed=True):
@@ -311,8 +317,11 @@ def cumulative_gain_curve(
     n = len(y)
     idx = np.unique(np.linspace(1, n, min(n_points, n)).astype(int)) - 1
     with np.errstate(divide="ignore", invalid="ignore"):
-        rate_gap = np.where(cum_treated[idx] > 0, cum_resp_treated[idx] / cum_treated[idx], 0.0) \
-            - np.where(cum_control[idx] > 0, cum_resp_control[idx] / cum_control[idx], 0.0)
+        rate_gap = np.where(
+            cum_treated[idx] > 0, cum_resp_treated[idx] / cum_treated[idx], 0.0
+        ) - np.where(
+            cum_control[idx] > 0, cum_resp_control[idx] / cum_control[idx], 0.0
+        )
     return pd.DataFrame(
         {
             "fraction_targeted": (idx + 1) / n,

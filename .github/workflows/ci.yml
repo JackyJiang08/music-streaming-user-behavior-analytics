@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Lint
+        run: ruff check .
+      - name: Unit tests
+        run: pytest
+
+  # Executes all ten notebooks in order against the committed data.
+  # Manual-trigger only: the full run takes tens of minutes (model training,
+  # bootstrap resampling, simulation), which is too heavy for every push —
+  # the unit-test job already locks the underlying modules and invariants.
+  notebooks:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Execute notebooks 01-10 in order
+        run: |
+          set -e
+          for nb in notebooks/0*.ipynb notebooks/10_*.ipynb; do
+            echo "=== $nb"
+            jupyter nbconvert --to notebook --execute --inplace "$nb"
+          done

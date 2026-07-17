@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 from lifelines import CoxPHFitter, KaplanMeierFitter
 from lifelines.statistics import multivariate_logrank_test, proportional_hazard_test
@@ -163,7 +162,8 @@ def build_cox_design(
     a held-out split, so test data is standardized with training statistics.
     """
     missing = [
-        c for c in numeric_covariates + categorical_covariates + [duration_col, event_col]
+        c
+        for c in numeric_covariates + categorical_covariates + [duration_col, event_col]
         if c not in df.columns
     ]
     if missing:
@@ -175,7 +175,9 @@ def build_cox_design(
         )
         if (numeric_stats["std"] == 0).any():
             constant = numeric_stats.index[numeric_stats["std"] == 0].tolist()
-            raise ValueError(f"constant numeric covariates cannot be scaled: {constant}")
+            raise ValueError(
+                f"constant numeric covariates cannot be scaled: {constant}"
+            )
 
     design = pd.DataFrame(index=df.index)
     for col in numeric_covariates:

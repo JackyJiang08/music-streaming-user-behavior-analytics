@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
@@ -21,10 +20,8 @@ from src.uplift_modeling import (
     validate_against_true_uplift,
 )
 
-FAST_CLF = HistGradientBoostingClassifier(max_iter=60, max_leaf_nodes=7,
-                                          random_state=0)
-FAST_REG = HistGradientBoostingRegressor(max_iter=60, max_leaf_nodes=7,
-                                         random_state=0)
+FAST_CLF = HistGradientBoostingClassifier(max_iter=60, max_leaf_nodes=7, random_state=0)
+FAST_REG = HistGradientBoostingRegressor(max_iter=60, max_leaf_nodes=7, random_state=0)
 
 
 @pytest.fixture(scope="module")
@@ -59,11 +56,9 @@ def test_learners_recover_segment_effect_signs(randomized_data, learner_factory)
     predicted = learner.predict_uplift(X)
 
     positive_segment = X[:, 0] < 0
-    assert predicted[positive_segment].mean() > 0.08   # true +0.20
+    assert predicted[positive_segment].mean() > 0.08  # true +0.20
     assert predicted[~positive_segment].mean() < 0.02  # true -0.10
-    assert (
-        predicted[positive_segment].mean() > predicted[~positive_segment].mean()
-    )
+    assert predicted[positive_segment].mean() > predicted[~positive_segment].mean()
 
 
 def test_learner_refuses_non_randomized_assignment(randomized_data):

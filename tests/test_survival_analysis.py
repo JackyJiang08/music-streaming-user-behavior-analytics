@@ -30,6 +30,7 @@ SURVIVAL_SQL = (REPO_ROOT / "sql" / "build_survival_table.sql").read_text()
 # Duration/event construction (the SQL itself) on a synthetic event log
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def survival_from_synthetic_log() -> pd.DataFrame:
     """Run the real SQL on a tiny event log with hand-computed answers.
@@ -46,29 +47,46 @@ def survival_from_synthetic_log() -> pd.DataFrame:
             ("C", "2026-01-15", "app_store", "mobile_android", "35-44", "casual"),
             ("D", "2026-01-05", "referral", "mobile_ios", "18-24", "explorer"),
         ],
-        columns=["user_id", "signup_date", "acquisition_channel",
-                 "primary_device", "age_group", "music_persona"],
+        columns=[
+            "user_id",
+            "signup_date",
+            "acquisition_channel",
+            "primary_device",
+            "age_group",
+            "music_persona",
+        ],
     )
     events = []
 
     def add(user, day, playlist=0, liked=0, skipped=0):
         events.append((user, f"{day} 12:00:00", skipped, liked, playlist))
 
-    add("Z", "2026-01-01")           # anchors obs_start
-    add("Z", "2026-03-01")           # anchors horizon
+    add("Z", "2026-01-01")  # anchors obs_start
+    add("Z", "2026-03-01")  # anchors horizon
     # A: gap Jan 5 -> Feb 1 (27d >= 14): event at Jan 5 + 14 = day 18.
-    add("A", "2026-01-02"); add("A", "2026-01-05"); add("A", "2026-02-01")
+    add("A", "2026-01-02")
+    add("A", "2026-01-05")
+    add("A", "2026-02-01")
     # B: no gap >= 14 and last event 9d before horizon: censored at day 50.
-    add("B", "2026-01-12", playlist=1); add("B", "2026-01-20")
-    add("B", "2026-02-01"); add("B", "2026-02-10"); add("B", "2026-02-20")
+    add("B", "2026-01-12", playlist=1)
+    add("B", "2026-01-20")
+    add("B", "2026-02-01")
+    add("B", "2026-02-10")
+    add("B", "2026-02-20")
     # C: never listened: event at signup + 14 = day 14.
     # D: tail gap Jan 10 -> horizon (50d >= 14): event at Jan 10 + 14 = day 19.
-    add("D", "2026-01-06", liked=1); add("D", "2026-01-10")
+    add("D", "2026-01-06", liked=1)
+    add("D", "2026-01-10")
 
     events_df = pd.DataFrame(
         events,
-        columns=["user_id", "event_timestamp", "skipped_flag", "liked_flag",
-                 "playlist_add_flag"],
+        columns=[
+            "user_id",
+            "event_timestamp",
+            "skipped_flag",
+            "liked_flag",
+            "playlist_add_flag",
+        ],
     )
     conn = sqlite3.connect(":memory:")
     users.to_sql("users", conn, index=False)
@@ -117,6 +135,7 @@ def test_sql_week1_landmark_covariates(survival_from_synthetic_log):
 # QA guards
 # ---------------------------------------------------------------------------
 
+
 def test_qa_guard_fires_on_negative_duration():
     bad = pd.DataFrame(
         {"user_id": ["U1", "U2"], "duration_days": [10, -3], "churn_event": [1, 0]}
@@ -136,6 +155,7 @@ def test_qa_guard_fires_on_duplicate_users():
 # ---------------------------------------------------------------------------
 # lifelines wrappers on synthetic survival data
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def synthetic_survival() -> pd.DataFrame:
@@ -188,8 +208,13 @@ def test_cox_recovers_risk_direction_and_generalizes(synthetic_survival):
 
     fitter = fit_cox(design_train)
     table = hazard_ratio_table(fitter)
-    assert list(table.columns) == ["covariate", "hazard_ratio", "ci_low",
-                                   "ci_high", "p_value"]
+    assert list(table.columns) == [
+        "covariate",
+        "hazard_ratio",
+        "ci_low",
+        "ci_high",
+        "p_value",
+    ]
     risk_row = table.set_index("covariate").loc["x_risk"]
     assert risk_row["hazard_ratio"] > 1.5  # higher risk score -> faster churn
     assert risk_row["ci_low"] > 1

@@ -61,11 +61,7 @@ def threshold_metrics(
     y_pred = (y_proba >= threshold).astype(int)
     precision = precision_score(y_true, y_pred, zero_division=0)
     recall = recall_score(y_true, y_pred, zero_division=0)
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if precision + recall
-        else 0.0
-    )
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     return {
         "threshold": threshold,
         "precision": float(precision),
