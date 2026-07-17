@@ -5,8 +5,8 @@ PYTHON ?= python
 help:  ## Show available targets
 	@grep -E '^[a-z]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  make %-10s %s\n", $$1, $$2}'
 
-setup:  ## Install all dependencies
-	$(PYTHON) -m pip install -r requirements.txt
+setup:  ## Install the locked dependency set (requirements.lock)
+	$(PYTHON) -m pip install -r requirements.lock
 
 test:  ## Run the unit-test suite
 	$(PYTHON) -m pytest

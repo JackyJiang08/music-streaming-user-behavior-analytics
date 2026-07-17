@@ -21,3 +21,6 @@ select = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# Bare `pytest` (as CI runs it) does not put the repo root on sys.path the
+# way `python -m pytest` does; tests import src.* so pin it explicitly.
+pythonpath = ["."]

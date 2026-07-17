@@ -25,17 +25,25 @@ Delivery follows the standard analytics workflow: SQL diagnostics → leakage-sa
 
 Against a baseline of **47.6%** 14-day churn and **17.4%** 30-day paid conversion:
 
+**Diagnostics**
+
 - **Usage habit dominates both problems.** Churn runs 69.6% for low-activity users vs. 11.6% for high-activity ones — and the low-activity segment also contributes **61%** of all churned users, so risk rate and volume point at the same intervention target.
 - **Content engagement halves churn.** Users with any playlist or liked-song activity churn at 29.4% vs. 62.8% without.
 - **The subscription funnel breaks at the last step:** 31,255 free/trial users narrow to 2,681 trial starts but only 30 in-window paid conversions.
 - **Referral is the quality acquisition channel** (22.8% conversion, 36.1% churn); paid social underperforms on every metric (12.6% conversion, 60.2% churn).
 - **Recent conversion gains are performance-driven, not mix-driven:** +3.5pp overall decomposes into +3.7pp within-group improvement and −0.2pp user-structure change, with no cohort-quality drift.
+
+**Modeling**
+
 - **Churn is predictable with an interpretable model:** a class-balanced logistic regression reaches ROC-AUC 0.788, catching 78% of churners at 66% precision — and beats a tuned random forest, so explainability costs nothing. Model-based risk tiers are monotonically calibrated (17% / 55% / 79% actual churn).
 - **Model complexity bought nothing:** three tuned gradient-boosting models (XGBoost, LightGBM, HistGB) land within ±0.07pp ROC-AUC of the logistic baseline, with paired-bootstrap CIs straddling zero and identical top-4 churn drivers — the interpretable model keeps the job.
-- **Statistical significance is not a launch decision:** a simulated home-screen experiment lifts 14-day retention by +2.6pp (p < 0.001) yet breaches its skip-rate guardrail (+13% relative), so the verdict is iterate-and-retest, not ship. The win concentrates in low-activity listeners (+4.4pp); daily peeking would have inflated the false-positive rate from 5% to ~20%.
 - **Churn has a clock:** half of a signup cohort disengages within 35 days, and 45% of churn-defining silences begin in week 1 — so onboarding nudges belong in days 0–3, not at day 14. The referral vs paid-social quality gap *widens* over time (Cox HR 0.77 vs 1.23 after day 30), while device makes no difference to churn timing (log-rank p = 0.37).
-- **Targeting beats blanket rollout:** an X-learner uplift model (rank correlation 0.45 with the simulation's true effects) plus the experiment-proven skip-rate exclusion targets 38% of users for ~70% of the full-launch retention value — and shows why model scores never replace guardrails: a −1.5pp harmed minority stays invisible to the model at this sample size.
 - **Upsell outreach can cost 3x less:** a calibrated conversion ranking (PR-AUC 0.727 vs a 21.1% base rate, Brier 0.099) makes a top-20% campaign convert at 66% — 1.52 contacts per conversion vs 4.74 at random — while covering 62% of all converters. Conversion is driven by listening intensity and ad pressure: the mirror image of churn's too-little-usage story.
+
+**Experimentation & Causal**
+
+- **Statistical significance is not a launch decision:** a simulated home-screen experiment lifts 14-day retention by +2.6pp (p < 0.001) yet breaches its skip-rate guardrail (+13% relative), so the verdict is iterate-and-retest, not ship. The win concentrates in low-activity listeners (+4.4pp); daily peeking would have inflated the false-positive rate from 5% to ~20%.
+- **Targeting beats blanket rollout:** an X-learner uplift model (rank correlation 0.45 with the simulation's true effects) plus the experiment-proven skip-rate exclusion targets 38% of users for ~70% of the full-launch retention value — and shows why model scores never replace guardrails: a −1.5pp harmed minority stays invisible to the model at this sample size.
 
 Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–10](notebooks/).
 
@@ -91,14 +99,14 @@ Everything is deterministic end to end: every stochastic step draws from `src/co
 ```bash
 git clone https://github.com/JackyJiang08/music-streaming-user-behavior-analytics.git
 cd music-streaming-user-behavior-analytics
-make setup       # 1. install pinned dependencies
+make setup       # 1. install the locked dependency set
 make lint        # 2. style gate (ruff check + format check)
 make test        # 3. unit tests incl. baseline-invariant locks
 make data        # 4. rebuild derived tables (feature, survival, experiment)
 make notebooks   # 5. execute notebooks 01-10 in order (slow: trains models)
 ```
 
-CI runs steps 2–3 on every push (Python 3.11/3.12); the notebooks job is a manual trigger of step 5 on GitHub-hosted runners.
+Dependencies follow a two-file convention: `requirements.txt` declares the loose, human-maintained ranges; `requirements.lock` is a full `pip freeze` from a virtualenv in which the entire suite passes, and it is what CI and `make setup` actually install. CI runs steps 2–3 on every push (Python 3.11/3.12); the notebooks job is a manual trigger of step 5 on GitHub-hosted runners.
 
 ## Repository Structure
 
@@ -129,19 +137,6 @@ CI runs steps 2–3 on every push (Python 3.11/3.12); the notebooks job is a man
 ├── pyproject.toml                 # ruff + pytest configuration
 └── requirements.txt
 ```
-
-## Project Status
-
-- [x] Retention and conversion diagnostics (SQL)
-- [x] User-level feature table and label engineering
-- [x] Exploratory data analysis and visualization
-- [x] Advanced EDA: contribution analysis, cohort drift, mix-shift decomposition
-- [x] Churn prediction model: training, evaluation, threshold tuning, risk segmentation
-- [x] A/B test design and analysis for retention/conversion levers (simulated treatment effects)
-- [x] Gradient-boosting comparison (HistGB, XGBoost, LightGBM) with paired-bootstrap evaluation
-- [x] Survival analysis: time-to-churn, Cox hazards, intervention windows
-- [x] Uplift modeling: individual treatment effects and guardrail-aware targeting policy
-- [x] Paid-conversion prediction model: leakage-safe landmark design, calibrated ranking, campaign economics
 
 ## License
 
