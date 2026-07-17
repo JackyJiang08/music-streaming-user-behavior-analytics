@@ -37,6 +37,18 @@ from src.data_loader import load_table
 TARGET_COL = "churn_label_14d"
 TEST_SIZE = 0.2
 
+# Winning gradient-boosting configuration from notebook 07's tuned search
+# (HistGradientBoosting family). Reused wherever a strong tabular default
+# is needed (uplift base learners, the conversion model) instead of
+# re-tuning from scratch.
+TUNED_GBM_PARAMS = {
+    "learning_rate": 0.0742,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 50,
+    "l2_regularization": 0.0057,
+    "max_iter": 150,
+}
+
 NUMERIC_FEATURES = [
     "active_days_30d",
     "listen_minutes_30d",

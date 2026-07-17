@@ -124,3 +124,18 @@ def test_precision_at_recall_validates_target(synthetic_problem):
     proba = LogisticRegression().fit(X, y).predict_proba(X)[:, 1]
     with pytest.raises(ValueError, match="target_recall"):
         precision_at_recall(y, proba, target_recall=1.5)
+
+
+def test_lift_table_matches_hand_computation():
+    from src.model_evaluation import lift_table
+
+    y = np.array([1, 1, 0, 0, 1, 0, 0, 0, 0, 0])
+    proba = np.array([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05])
+    table = lift_table(y, proba, fractions=[0.2, 0.5])
+    top2 = table.iloc[0]
+    assert top2["n_contacted"] == 2
+    assert top2["precision"] == 1.0            # both top-2 are positives
+    assert top2["share_of_positives_captured"] == pytest.approx(2 / 3)
+    assert top2["lift_vs_random"] == pytest.approx(1.0 / 0.3)
+    with pytest.raises(ValueError, match="fractions"):
+        lift_table(y, proba, fractions=[0, 0.5])

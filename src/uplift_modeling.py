@@ -35,17 +35,12 @@ from sklearn.base import clone
 from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
 
 from src.ab_testing import srm_check
+from src.churn_modeling import TUNED_GBM_PARAMS
 from src.config import RANDOM_SEED
 
 # The winning gradient-boosting configuration from notebook 07's tuned
-# search (HistGradientBoosting family), reused as the default base learner.
-_DEFAULT_BASE_PARAMS = {
-    "learning_rate": 0.0742,
-    "max_leaf_nodes": 15,
-    "min_samples_leaf": 50,
-    "l2_regularization": 0.0057,
-    "max_iter": 150,
-}
+# search, shared project-wide via src.churn_modeling.
+_DEFAULT_BASE_PARAMS = TUNED_GBM_PARAMS
 
 
 def _default_classifier(random_state: int) -> HistGradientBoostingClassifier:

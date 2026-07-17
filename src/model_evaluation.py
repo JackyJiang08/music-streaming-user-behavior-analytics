@@ -206,6 +206,48 @@ def calibration_table(
     return grouped.reset_index(drop=True)
 
 
+def lift_table(
+    y_true: Sequence[int],
+    y_proba: Sequence[float],
+    fractions: Sequence[float] = (0.05, 0.10, 0.20, 0.30, 0.50),
+) -> pd.DataFrame:
+    """Campaign view of a ranking model: contact the top-f by score.
+
+    For each fraction f: precision within the targeted slice, share of all
+    positives captured, and lift versus contacting users at random (whose
+    precision is the base rate).
+    """
+    y_true = np.asarray(y_true)
+    y_proba = np.asarray(y_proba, dtype=float)
+    _validate_binary_arrays(y_true, y_proba)
+    fractions = list(fractions)
+    if not fractions or not all(0 < f <= 1 for f in fractions):
+        raise ValueError(f"fractions must be in (0, 1], got {fractions}")
+
+    order = np.argsort(-y_proba, kind="stable")
+    y_sorted = y_true[order]
+    base_rate = y_true.mean()
+    total_positives = int(y_true.sum())
+
+    rows = []
+    for fraction in fractions:
+        k = max(1, int(round(len(y_true) * fraction)))
+        captured = int(y_sorted[:k].sum())
+        precision = captured / k
+        rows.append(
+            {
+                "fraction_targeted": fraction,
+                "n_contacted": k,
+                "precision": precision,
+                "share_of_positives_captured": captured / total_positives
+                if total_positives
+                else np.nan,
+                "lift_vs_random": precision / base_rate if base_rate else np.nan,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def precision_at_recall(
     y_true: Sequence[int],
     y_proba: Sequence[float],
