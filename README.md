@@ -16,7 +16,7 @@ This project analyzes the two core commercial questions for a subscription strea
 - **Retention** — which behavioral signals (activity level, ad pressure, content interaction) predict short-term churn, and which segments are at risk.
 - **Monetization** — where the free-to-paid subscription funnel breaks, and which levers (trial exposure, device experience, engagement depth) move conversion.
 
-Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → churn prediction modeling → conversion modeling and experiment design (planned).
+Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → churn prediction modeling → A/B test design and analysis → conversion modeling (planned).
 
 ## Key Findings
 
@@ -28,8 +28,9 @@ Against a baseline of **47.6%** 14-day churn and **17.4%** 30-day paid conversio
 - **Referral is the quality acquisition channel** (22.8% conversion, 36.1% churn); paid social underperforms on every metric (12.6% conversion, 60.2% churn).
 - **Recent conversion gains are performance-driven, not mix-driven:** +3.5pp overall decomposes into +3.7pp within-group improvement and −0.2pp user-structure change, with no cohort-quality drift.
 - **Churn is predictable with an interpretable model:** a class-balanced logistic regression reaches ROC-AUC 0.788, catching 78% of churners at 66% precision — and beats a tuned random forest, so explainability costs nothing. Model-based risk tiers are monotonically calibrated (17% / 55% / 79% actual churn).
+- **Statistical significance is not a launch decision:** a simulated home-screen experiment lifts 14-day retention by +2.6pp (p < 0.001) yet breaches its skip-rate guardrail (+13% relative), so the verdict is iterate-and-retest, not ship. The win concentrates in low-activity listeners (+4.4pp); daily peeking would have inflated the false-positive rate from 5% to ~20%.
 
-Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–05](notebooks/).
+Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–06](notebooks/).
 
 ## Quickstart
 
@@ -40,6 +41,12 @@ pip install -r requirements.txt
 
 # Rebuild the user-level wide table from the raw event tables
 python scripts/build_user_feature_table.py
+
+# Regenerate the simulated A/B experiment dataset
+python -m src.experiment_simulation
+
+# Run the unit tests
+pytest
 
 # Or explore interactively
 jupyter lab notebooks/
@@ -59,7 +66,7 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 | `ad_events.csv` | event | Ad impressions, clicks, completions, revenue |
 | `feature_table.csv` | user | Prebuilt user-level feature snapshot |
 
-`listening_events` is stored gzipped to stay under GitHub's 100 MB file limit.
+`listening_events` is stored gzipped to stay under GitHub's 100 MB file limit. `data/experiment_results.csv.gz` is a generated artifact — the simulated A/B experiment outcomes (with per-user ground-truth uplift) produced by `python -m src.experiment_simulation` and committed for downstream analyses.
 
 ## Analysis
 
@@ -70,20 +77,26 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 | [`03_eda_and_visualization`](notebooks/03_eda_and_visualization.ipynb) | Visual diagnostics of churn and conversion drivers across segments, devices, channels, and cohorts |
 | [`04_advanced_eda_contribution_and_mix_shift`](notebooks/04_advanced_eda_contribution_and_mix_shift.ipynb) | Segment prioritization (rate vs. contribution), cohort quality drift, mix-shift decomposition |
 | [`05_churn_model_training_and_evaluation`](notebooks/05_churn_model_training_and_evaluation.ipynb) | Churn classifiers (logistic regression vs. random forest): evaluation, threshold tuning, drivers, risk tiers |
+| [`06_ab_test_design_and_analysis`](notebooks/06_ab_test_design_and_analysis.ipynb) | A/B test with simulated treatment effects: power analysis, SRM gate, metric scorecard, pitfalls (peeking, multiple testing, novelty), segment drill-down, launch decision |
 
-Each notebook opens with its scope; notebooks 03–05 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
+Each notebook opens with its scope; notebooks 03–06 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
 
 ## Repository Structure
 
 ```
 ├── data/                          # Source tables (see Dataset)
-├── notebooks/                     # Analysis notebooks (01-05)
+├── notebooks/                     # Analysis notebooks (01-06)
 ├── src/
-│   └── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
+│   ├── config.py                  # Project constants: random seed, snapshot dates
+│   ├── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
+│   ├── ab_testing.py              # Experiment stats: power, SRM, tests, scorecard, peeking
+│   └── experiment_simulation.py   # Simulated experiment with injected ground-truth effects
 ├── sql/
-│   └── build_user_feature_table.sql   # Wide-table definition (single source of truth)
+│   ├── build_user_feature_table.sql   # Wide-table definition (single source of truth)
+│   └── ab_test_population.sql         # Experiment eligibility cohort
 ├── scripts/
 │   └── build_user_feature_table.py    # CLI pipeline: build + QA + export the wide table
+├── tests/                         # Unit tests for src/ (pytest)
 └── requirements.txt
 ```
 
@@ -94,8 +107,8 @@ Each notebook opens with its scope; notebooks 03–05 close with data-grounded K
 - [x] Exploratory data analysis and visualization
 - [x] Advanced EDA: contribution analysis, cohort drift, mix-shift decomposition
 - [x] Churn prediction model: training, evaluation, threshold tuning, risk segmentation
+- [x] A/B test design and analysis for retention/conversion levers (simulated treatment effects)
 - [ ] Paid-conversion prediction model
-- [ ] A/B test design and analysis for retention/conversion levers (simulated treatment effects)
 
 *Candidate extensions under consideration: gradient-boosting comparison, uplift modeling, survival analysis.*
 
