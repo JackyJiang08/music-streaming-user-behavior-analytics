@@ -2,6 +2,7 @@
 
 **End-to-end analytics on music-streaming user behavior: retention diagnostics, free-to-paid conversion, and a reproducible user-level feature/label pipeline.**
 
+[![CI](https://github.com/JackyJiang08/music-streaming-user-behavior-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/JackyJiang08/music-streaming-user-behavior-analytics/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Stack](https://img.shields.io/badge/stack-SQL%20%7C%20pandas%20%7C%20scikit--learn-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -32,31 +33,23 @@ Against a baseline of **47.6%** 14-day churn and **17.4%** 30-day paid conversio
 - **Churn is predictable with an interpretable model:** a class-balanced logistic regression reaches ROC-AUC 0.788, catching 78% of churners at 66% precision — and beats a tuned random forest, so explainability costs nothing. Model-based risk tiers are monotonically calibrated (17% / 55% / 79% actual churn).
 - **Model complexity bought nothing:** three tuned gradient-boosting models (XGBoost, LightGBM, HistGB) land within ±0.07pp ROC-AUC of the logistic baseline, with paired-bootstrap CIs straddling zero and identical top-4 churn drivers — the interpretable model keeps the job.
 - **Statistical significance is not a launch decision:** a simulated home-screen experiment lifts 14-day retention by +2.6pp (p < 0.001) yet breaches its skip-rate guardrail (+13% relative), so the verdict is iterate-and-retest, not ship. The win concentrates in low-activity listeners (+4.4pp); daily peeking would have inflated the false-positive rate from 5% to ~20%.
-- **Upsell outreach can cost 3x less:** a calibrated conversion ranking (PR-AUC 0.727 vs a 21.1% base rate, Brier 0.099) makes a top-20% campaign convert at 66% — 1.52 contacts per conversion vs 4.74 at random — while covering 62% of all converters. Conversion is driven by listening intensity and ad pressure: the mirror image of churn's too-little-usage story.
-- **Targeting beats blanket rollout:** an X-learner uplift model (rank correlation 0.45 with the simulation's true effects) plus the experiment-proven skip-rate exclusion targets 38% of users for ~70% of the full-launch retention value — and shows why model scores never replace guardrails: a −1.5pp harmed minority stays invisible to the model at this sample size.
 - **Churn has a clock:** half of a signup cohort disengages within 35 days, and 45% of churn-defining silences begin in week 1 — so onboarding nudges belong in days 0–3, not at day 14. The referral vs paid-social quality gap *widens* over time (Cox HR 0.77 vs 1.23 after day 30), while device makes no difference to churn timing (log-rank p = 0.37).
+- **Targeting beats blanket rollout:** an X-learner uplift model (rank correlation 0.45 with the simulation's true effects) plus the experiment-proven skip-rate exclusion targets 38% of users for ~70% of the full-launch retention value — and shows why model scores never replace guardrails: a −1.5pp harmed minority stays invisible to the model at this sample size.
+- **Upsell outreach can cost 3x less:** a calibrated conversion ranking (PR-AUC 0.727 vs a 21.1% base rate, Brier 0.099) makes a top-20% campaign convert at 66% — 1.52 contacts per conversion vs 4.74 at random — while covering 62% of all converters. Conversion is driven by listening intensity and ad pressure: the mirror image of churn's too-little-usage story.
 
-Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–06](notebooks/).
+Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–10](notebooks/).
 
 ## Quickstart
 
 ```bash
 git clone https://github.com/JackyJiang08/music-streaming-user-behavior-analytics.git
 cd music-streaming-user-behavior-analytics
-pip install -r requirements.txt
-
-# Rebuild the user-level wide table from the raw event tables
-python scripts/build_user_feature_table.py
-
-# Regenerate the simulated A/B experiment dataset
-python -m src.experiment_simulation
-
-# Run the unit tests
-pytest
-
-# Or explore interactively
-jupyter lab notebooks/
+make setup      # install dependencies
+make test       # run the unit-test suite
+jupyter lab notebooks/   # explore interactively
 ```
+
+`make help` lists all targets (setup, test, lint, data, notebooks).
 
 Runs on `pandas + sqlite3`; no database setup required. All notebooks and scripts load data through `src/data_loader.py`, which auto-discovers `./data` locally or `/content/data` on Colab (override with `STREAMING_DATA_DIR`) and reads the gzipped events file directly — nothing needs to be decompressed.
 
@@ -91,11 +84,27 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 
 Each notebook opens with its scope; notebooks 03–10 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
 
+## Reproducibility
+
+Everything is deterministic end to end: every stochastic step draws from `src/config.py`'s single `RANDOM_SEED`, snapshot and window dates are centralized in the same module, and the headline baselines are locked by `tests/test_baseline_invariants.py` so CI fails if they drift. From clone to a full re-execution:
+
+```bash
+git clone https://github.com/JackyJiang08/music-streaming-user-behavior-analytics.git
+cd music-streaming-user-behavior-analytics
+make setup       # 1. install pinned dependencies
+make lint        # 2. style gate (ruff check + format check)
+make test        # 3. unit tests incl. baseline-invariant locks
+make data        # 4. rebuild derived tables (feature, survival, experiment)
+make notebooks   # 5. execute notebooks 01-10 in order (slow: trains models)
+```
+
+CI runs steps 2–3 on every push (Python 3.11/3.12); the notebooks job is a manual trigger of step 5 on GitHub-hosted runners.
+
 ## Repository Structure
 
 ```
 ├── data/                          # Source tables (see Dataset)
-├── notebooks/                     # Analysis notebooks (01-06)
+├── notebooks/                     # Analysis notebooks 01-10 (see Analysis index above)
 ├── src/
 │   ├── config.py                  # Project constants: random seed, snapshot dates
 │   ├── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
@@ -114,7 +123,10 @@ Each notebook opens with its scope; notebooks 03–10 close with data-grounded K
 ├── scripts/
 │   ├── build_user_feature_table.py    # CLI pipeline: build + QA + export the wide table
 │   └── build_survival_table.py        # CLI pipeline: build + QA + export the survival table
-├── tests/                         # Unit tests for src/ (pytest)
+├── tests/                         # 75 unit tests: modules, SQL constructions, baseline invariants
+├── .github/workflows/ci.yml      # CI: lint + tests per push; manual full notebook run
+├── Makefile                       # setup / test / lint / data / notebooks
+├── pyproject.toml                 # ruff + pytest configuration
 └── requirements.txt
 ```
 
