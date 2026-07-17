@@ -5,5 +5,7 @@ seaborn>=0.12
 scikit-learn>=1.1
 scipy>=1.10
 statsmodels>=0.14
+xgboost>=2.0
+lightgbm>=4.0
 jupyter
 pytest>=7.0

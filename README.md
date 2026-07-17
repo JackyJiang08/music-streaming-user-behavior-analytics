@@ -16,7 +16,7 @@ This project analyzes the two core commercial questions for a subscription strea
 - **Retention** — which behavioral signals (activity level, ad pressure, content interaction) predict short-term churn, and which segments are at risk.
 - **Monetization** — where the free-to-paid subscription funnel breaks, and which levers (trial exposure, device experience, engagement depth) move conversion.
 
-Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → churn prediction modeling → A/B test design and analysis → conversion modeling (planned).
+Delivery follows the standard analytics workflow: SQL diagnostics → leakage-safe user-level feature/label data asset → exploratory analysis and business visualization → churn prediction modeling and a gradient-boosting bake-off → A/B test design and analysis → conversion modeling (planned).
 
 ## Key Findings
 
@@ -28,6 +28,7 @@ Against a baseline of **47.6%** 14-day churn and **17.4%** 30-day paid conversio
 - **Referral is the quality acquisition channel** (22.8% conversion, 36.1% churn); paid social underperforms on every metric (12.6% conversion, 60.2% churn).
 - **Recent conversion gains are performance-driven, not mix-driven:** +3.5pp overall decomposes into +3.7pp within-group improvement and −0.2pp user-structure change, with no cohort-quality drift.
 - **Churn is predictable with an interpretable model:** a class-balanced logistic regression reaches ROC-AUC 0.788, catching 78% of churners at 66% precision — and beats a tuned random forest, so explainability costs nothing. Model-based risk tiers are monotonically calibrated (17% / 55% / 79% actual churn).
+- **Model complexity bought nothing:** three tuned gradient-boosting models (XGBoost, LightGBM, HistGB) land within ±0.07pp ROC-AUC of the logistic baseline, with paired-bootstrap CIs straddling zero and identical top-4 churn drivers — the interpretable model keeps the job.
 - **Statistical significance is not a launch decision:** a simulated home-screen experiment lifts 14-day retention by +2.6pp (p < 0.001) yet breaches its skip-rate guardrail (+13% relative), so the verdict is iterate-and-retest, not ship. The win concentrates in low-activity listeners (+4.4pp); daily peeking would have inflated the false-positive rate from 5% to ~20%.
 
 Full evidence, charts, and caveats in the Key Findings sections of [notebooks 03–06](notebooks/).
@@ -78,8 +79,9 @@ Five simulated tables covering **50,000 users** and **~1.5M events**:
 | [`04_advanced_eda_contribution_and_mix_shift`](notebooks/04_advanced_eda_contribution_and_mix_shift.ipynb) | Segment prioritization (rate vs. contribution), cohort quality drift, mix-shift decomposition |
 | [`05_churn_model_training_and_evaluation`](notebooks/05_churn_model_training_and_evaluation.ipynb) | Churn classifiers (logistic regression vs. random forest): evaluation, threshold tuning, drivers, risk tiers |
 | [`06_ab_test_design_and_analysis`](notebooks/06_ab_test_design_and_analysis.ipynb) | A/B test with simulated treatment effects: power analysis, SRM gate, metric scorecard, pitfalls (peeking, multiple testing, novelty), segment drill-down, launch decision |
+| [`07_gradient_boosting_churn_comparison`](notebooks/07_gradient_boosting_churn_comparison.ipynb) | GBM bake-off (HistGB, XGBoost, LightGBM) vs the logistic baseline on the frozen notebook-05 protocol: paired-bootstrap AUC deltas, calibration, driver agreement, operating-point economics |
 
-Each notebook opens with its scope; notebooks 03–06 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
+Each notebook opens with its scope; notebooks 03–07 close with data-grounded Key Findings. The wide-table SQL is versioned once in `sql/build_user_feature_table.sql` and runs end to end via `scripts/build_user_feature_table.py`.
 
 ## Repository Structure
 
@@ -90,7 +92,9 @@ Each notebook opens with its scope; notebooks 03–06 close with data-grounded K
 │   ├── config.py                  # Project constants: random seed, snapshot dates
 │   ├── data_loader.py             # Shared loader: CSVs -> pandas -> in-memory SQLite
 │   ├── ab_testing.py              # Experiment stats: power, SRM, tests, scorecard, peeking
-│   └── experiment_simulation.py   # Simulated experiment with injected ground-truth effects
+│   ├── experiment_simulation.py   # Simulated experiment with injected ground-truth effects
+│   ├── churn_modeling.py          # Frozen notebook-05 modeling protocol (split, features, preprocessing)
+│   └── model_evaluation.py        # Evaluation harness: metrics table, calibration, paired bootstrap
 ├── sql/
 │   ├── build_user_feature_table.sql   # Wide-table definition (single source of truth)
 │   └── ab_test_population.sql         # Experiment eligibility cohort
@@ -108,9 +112,10 @@ Each notebook opens with its scope; notebooks 03–06 close with data-grounded K
 - [x] Advanced EDA: contribution analysis, cohort drift, mix-shift decomposition
 - [x] Churn prediction model: training, evaluation, threshold tuning, risk segmentation
 - [x] A/B test design and analysis for retention/conversion levers (simulated treatment effects)
+- [x] Gradient-boosting comparison (HistGB, XGBoost, LightGBM) with paired-bootstrap evaluation
 - [ ] Paid-conversion prediction model
 
-*Candidate extensions under consideration: gradient-boosting comparison, uplift modeling, survival analysis.*
+*Candidate extensions under consideration: uplift modeling, survival analysis.*
 
 ## License
 
